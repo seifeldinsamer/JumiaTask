@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      - APP_DB_USERNAME=postgres
+      - APP_DB_PASSWORD=123456
+      - APP_DB_NAME=jumia
+      - APP_DB_PORT=5432
+      - APP_DB_HOST=db
+      - APP_Port=3000
+  db:
+    container_name: db
+    image: postgres
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=jumia
+    volumes:
+      - postgres:/data/postgres
+      - ./init.sh:/docker-entrypoint/init.sh
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  frontend:
+    container_name: frontend
+    depends_on:
+      - backend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
+    volumes:
+      - ./angular:/project
+      - /project/node_modules
+    environment:
+      - BACKEND_HOST="backend:3000"
+
+volumes:
+  postgres:
